@@ -73,6 +73,7 @@ class ViewController: UIViewController {
                     label.tag = i * Board.size + j
                     label.textAlignment = .center
                     label.font = UIFont(name: "Futura", size: 40.0)
+                    label.adjustsFontSizeToFitWidth = true
                     label.layer.cornerRadius = 5
                     label.layer.masksToBounds = true
                     label.backgroundColor = UIColor.lightGray
@@ -121,9 +122,17 @@ class ViewController: UIViewController {
         }
         setLabels()
         setScore()
+        if board.checkIsLose() {
+            let alert = UIAlertController(title: "You Lose", message: "Final score: \(board.score)", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Try again", style: .default, handler: { _ in
+                self.reset(nil)
+            }))
+            alert.addAction(UIAlertAction(title: "Give up", style: .cancel, handler: nil))
+            present(alert, animated: true, completion: nil)
+        }
     }
 
-    @IBAction func reset(_ sender: UIBarButtonItem) {
+    @IBAction func reset(_ sender: Any?) {
         board.reset()
         setLabels()
         setScore()

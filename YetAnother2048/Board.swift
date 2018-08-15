@@ -98,22 +98,37 @@ class Board: NSObject {
     }
     
     func checkIsFull() -> Bool {
-        var isFull: Bool = true
+        return tileMatrix.flatMap { $0.map { $0 } }.filter { $0 == -1 }.count == 0
+    }
+    
+    func checkIsLose() -> Bool {
+        guard checkIsFull() else {
+            return false
+        }
+        
+        var isLose = true
         for i in 0..<Board.size {
-            for j in 0..<Board.size {
-                if tileMatrix[i][j] == -1 {
-                    isFull = false
+            for j in 0..<Board.size-1 {
+                if tileMatrix[i][j] == tileMatrix[i][j + 1] && tileMatrix[i][j] != -1 {
+                    isLose = false
                     break
                 }
             }
         }
-        return isFull
+        if isLose {
+            for j in 0..<Board.size {
+                for i in 0..<Board.size-1 {
+                    if tileMatrix[i + 1][j] == tileMatrix[i][j] && tileMatrix[i][j] != -1 {
+                        isLose = false
+                        break
+                    }
+                }
+            }
+        }
+        return isLose
     }
     
     private func generateNewTile() {
-        guard !checkIsFull() else {
-            return
-        }
         while true {
             let x = Int(arc4random()) % Board.size
             let y = Int(arc4random()) % Board.size
