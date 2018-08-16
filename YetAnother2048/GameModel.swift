@@ -1,5 +1,5 @@
 //
-//  Board.swift
+//  GameModel.swift
 //  YetAnother2048
 //
 //  Created by 宋 奎熹 on 2018/8/6.
@@ -10,11 +10,25 @@ import Foundation
 
 typealias BoardMatrix = [[Int]]
 
-class Board: NSObject {
+class GameModel: NSObject, Codable, NSCoding {
+    
+    required convenience init?(coder aDecoder: NSCoder) {
+        self.init()
+        self.score = aDecoder.decodeInteger(forKey: "score")
+        self.tileMatrix = aDecoder.decodeObject(forKey: "matrix") as! BoardMatrix
+    }
+    
+    func encode(with aCoder: NSCoder) {
+        aCoder.encode(score, forKey: "score")
+        aCoder.encode(tileMatrix, forKey: "matrix")
+    }
     
     static let size: Int = 4
     var score: Int = 0
-    var tileMatrix: BoardMatrix = [[Int]]()
+    var tileMatrix: BoardMatrix = BoardMatrix()
+    var isLose: Bool {
+        return self.checkIsLose()
+    }
     
     override init() {
         super.init()
@@ -22,28 +36,28 @@ class Board: NSObject {
     }
     
     func reset() {
-        tileMatrix = Array(repeating: Array(repeating: -1, count: Board.size), count: Board.size)
+        tileMatrix = Array(repeating: Array(repeating: -1, count: GameModel.size), count: GameModel.size)
+        
+        score = 0
         
         for _ in 0...1 {
             self.generateNewTile()
         }
-        
-        score = 0
     }
     
     func up() {
         var moved: Bool = false
         var temps: [[Int]] = []
-        for i in 0..<Board.size {
+        for i in 0..<GameModel.size {
             temps.append(tileMatrix.map { $0[i] })
         }
-        for i in 0..<Board.size {
+        for i in 0..<GameModel.size {
             let res = handle(tiles: &temps[i])
             moved = moved || res
         }
         if moved {
-            for i in 0..<Board.size {
-                for j in 0..<Board.size {
+            for i in 0..<GameModel.size {
+                for j in 0..<GameModel.size {
                     tileMatrix[i][j] = temps[j][i]
                 }
             }
@@ -54,18 +68,18 @@ class Board: NSObject {
     func down() {
         var moved: Bool = false
         var temps: [[Int]] = []
-        for i in 0..<Board.size {
+        for i in 0..<GameModel.size {
             temps.append(tileMatrix.map { $0[i] })
         }
-        for i in 0..<Board.size {
+        for i in 0..<GameModel.size {
             var tempArray: [Int] = temps[i].reversed()
             let res = handle(tiles: &tempArray)
             moved = moved || res
             temps[i] = tempArray.reversed()
         }
         if moved {
-            for i in 0..<Board.size {
-                for j in 0..<Board.size {
+            for i in 0..<GameModel.size {
+                for j in 0..<GameModel.size {
                     tileMatrix[i][j] = temps[j][i]
                 }
             }
@@ -75,7 +89,7 @@ class Board: NSObject {
     
     func left() {
         var moved: Bool = false
-        for i in 0..<Board.size {
+        for i in 0..<GameModel.size {
             let res = handle(tiles: &tileMatrix[i])
             moved = moved || res
         }
@@ -86,7 +100,7 @@ class Board: NSObject {
     
     func right() {
         var moved: Bool = false
-        for i in 0..<Board.size {
+        for i in 0..<GameModel.size {
             var tempArray: [Int] = tileMatrix[i].reversed()
             let res = handle(tiles: &tempArray)
             moved = moved || res
@@ -107,8 +121,8 @@ class Board: NSObject {
         }
         
         var isLose = true
-        for i in 0..<Board.size {
-            for j in 0..<Board.size-1 {
+        for i in 0..<GameModel.size {
+            for j in 0..<GameModel.size-1 {
                 if tileMatrix[i][j] == tileMatrix[i][j + 1] && tileMatrix[i][j] != -1 {
                     isLose = false
                     break
@@ -116,8 +130,8 @@ class Board: NSObject {
             }
         }
         if isLose {
-            for j in 0..<Board.size {
-                for i in 0..<Board.size-1 {
+            for j in 0..<GameModel.size {
+                for i in 0..<GameModel.size-1 {
                     if tileMatrix[i + 1][j] == tileMatrix[i][j] && tileMatrix[i][j] != -1 {
                         isLose = false
                         break
@@ -130,8 +144,8 @@ class Board: NSObject {
     
     private func generateNewTile() {
         while true {
-            let x = Int(arc4random()) % Board.size
-            let y = Int(arc4random()) % Board.size
+            let x = Int(arc4random()) % GameModel.size
+            let y = Int(arc4random()) % GameModel.size
             if tileMatrix[x][y] != -1 {
                 continue
             }

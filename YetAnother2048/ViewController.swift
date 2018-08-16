@@ -20,7 +20,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var boardView: UIView?
     @IBOutlet weak var scoreLabel: UILabel?
     
-    var board = Board()
+    var gameModel = GameModel()
     
     var labelMatrix: [[UILabel]] = []
     
@@ -39,38 +39,51 @@ class ViewController: UIViewController {
         let rightSwipeGesture: UISwipeGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe))
         rightSwipeGesture.direction = .right
         self.view.addGestureRecognizer(rightSwipeGesture)
+        
+        if let model = GameHelper.shared.loadGame() {
+            let alert = UIAlertController(title: "Unfinished game", message: "There is an unfinished game, do you want to continue?", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Never mind", style: .cancel, handler: { _ in
+                
+            }))
+            alert.addAction(UIAlertAction(title: "Go on", style: .default, handler: { _ in
+                DispatchQueue.main.async {
+                    self.gameModel = model
+                    self.setModel()
+                }
+            }))
+            present(alert, animated: true, completion: nil)
+        }
     }
     
     @objc func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
         switch gesture.direction {
         case .left:
-            board.left()
+            gameModel.left()
         case .right:
-            board.right()
+            gameModel.right()
         case .up:
-            board.up()
+            gameModel.up()
         case .down:
-            board.down()
+            gameModel.down()
         default:
             break
         }
-        setLabels()
-        setScore()
+        setModel()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         if let boardView = self.boardView {
-            let width = (UIScreen.main.bounds.size.width - 20) / CGFloat(Board.size)
-            for i in 0..<Board.size {
+            let width = (UIScreen.main.bounds.size.width - 20) / CGFloat(GameModel.size)
+            for i in 0..<GameModel.size {
                 var tempLabels: [UILabel] = []
-                for j in 0..<Board.size {
+                for j in 0..<GameModel.size {
                     let label: UILabel = UILabel(frame: CGRect(x: 5 + CGFloat(j) * width,
                                                                y: 5 + CGFloat(i) * width,
                                                                width: width - 10,
                                                                height: width - 10))
-                    label.tag = i * Board.size + j
+                    label.tag = i * GameModel.size + j
                     label.textAlignment = .center
                     label.font = UIFont(name: "Futura", size: 40.0)
                     label.adjustsFontSizeToFitWidth = true
@@ -83,13 +96,13 @@ class ViewController: UIViewController {
                 labelMatrix.append(tempLabels)
             }
         }
-        setLabels()
+        setModel()
     }
     
-    private func setLabels() {
-        for i in 0..<Board.size {
-            for j in 0..<Board.size {
-                let val = board.tileMatrix[i][j]
+    private func setModel() {
+        for i in 0..<GameModel.size {
+            for j in 0..<GameModel.size {
+                let val = gameModel.tileMatrix[i][j]
                 let label = labelMatrix[i][j]
                 if val > 0 {
                     label.text = "\(val)"
@@ -103,27 +116,24 @@ class ViewController: UIViewController {
                 }
             }
         }
-    }
-    
-    private func setScore() {
-        scoreLabel?.text = "\(board.score)"
+        scoreLabel?.text = "\(gameModel.score)"
     }
     
     @IBAction func didTapButton(_ sender: UIButton) {
         switch ActionDirection(rawValue: sender.tag)! {
         case .left:
-            board.left()
+            gameModel.left()
         case .up:
-            board.up()
+            gameModel.up()
         case .down:
-            board.down()
+            gameModel.down()
         case .right:
-            board.right()
+            gameModel.right()
         }
-        setLabels()
-        setScore()
-        if board.checkIsLose() {
-            let alert = UIAlertController(title: "You Lose", message: "Final score: \(board.score)", preferredStyle: .alert)
+        setModel()
+        if gameModel.checkIsLose() {
+            GameHelper.shared.setNoGameSaved()
+            let alert = UIAlertController(title: "You lose", message: "Final score: \(gameModel.score)", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "Try again", style: .default, handler: { _ in
                 self.reset(nil)
             }))
@@ -133,10 +143,10 @@ class ViewController: UIViewController {
     }
 
     @IBAction func reset(_ sender: Any?) {
-        board.reset()
-        setLabels()
-        setScore()
+        self.gameModel = GameModel()
+        gameModel.reset()
+        setModel()
+        GameHelper.shared.setNoGameSaved()
     }
     
 }
-
