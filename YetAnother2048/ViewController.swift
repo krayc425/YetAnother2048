@@ -17,11 +17,10 @@ enum ActionDirection: Int {
 
 class ViewController: UIViewController {
     
-    @IBOutlet weak var boardView: UIView?
-    @IBOutlet weak var scoreLabel: UILabel?
+    @IBOutlet weak var boardView: UIView!
+    @IBOutlet weak var scoreLabel: UILabel!
     
     var gameModel = GameModel()
-    
     var labelMatrix: [[UILabel]] = []
     
     override func viewDidLoad() {
@@ -29,29 +28,27 @@ class ViewController: UIViewController {
         
         let upSwipeGesture: UISwipeGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe))
         upSwipeGesture.direction = .up
-        self.view.addGestureRecognizer(upSwipeGesture)
+        view.addGestureRecognizer(upSwipeGesture)
         let downSwipeGesture: UISwipeGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe))
         downSwipeGesture.direction = .down
-        self.view.addGestureRecognizer(downSwipeGesture)
+        view.addGestureRecognizer(downSwipeGesture)
         let leftSwipeGesture: UISwipeGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe))
         leftSwipeGesture.direction = .left
-        self.view.addGestureRecognizer(leftSwipeGesture)
+        view.addGestureRecognizer(leftSwipeGesture)
         let rightSwipeGesture: UISwipeGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe))
         rightSwipeGesture.direction = .right
-        self.view.addGestureRecognizer(rightSwipeGesture)
+        view.addGestureRecognizer(rightSwipeGesture)
         
         if let model = GameHelper.shared.loadGame() {
             let alert = UIAlertController(title: "Unfinished game", message: "There is an unfinished game, do you want to continue?", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "Never mind", style: .cancel, handler: { _ in
-                
-            }))
+            alert.addAction(UIAlertAction(title: "Never mind", style: .cancel))
             alert.addAction(UIAlertAction(title: "Go on", style: .default, handler: { _ in
-                DispatchQueue.main.async {
-                    self.gameModel = model
-                    self.setModel()
+                DispatchQueue.main.async { [weak self] in
+                    self?.gameModel = model
+                    self?.setModel()
                 }
             }))
-            present(alert, animated: true, completion: nil)
+            present(alert, animated: true)
         }
     }
     
@@ -74,27 +71,25 @@ class ViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        if let boardView = self.boardView {
-            let width = (UIScreen.main.bounds.size.width - 20) / CGFloat(GameModel.size)
-            for i in 0..<GameModel.size {
-                var tempLabels: [UILabel] = []
-                for j in 0..<GameModel.size {
-                    let label: UILabel = UILabel(frame: CGRect(x: 5 + CGFloat(j) * width,
-                                                               y: 5 + CGFloat(i) * width,
-                                                               width: width - 10,
-                                                               height: width - 10))
-                    label.tag = i * GameModel.size + j
-                    label.textAlignment = .center
-                    label.font = UIFont(name: "Futura", size: 40.0)
-                    label.adjustsFontSizeToFitWidth = true
-                    label.layer.cornerRadius = 5
-                    label.layer.masksToBounds = true
-                    label.backgroundColor = UIColor.lightGray
-                    tempLabels.append(label)
-                    boardView.addSubview(label)
-                }
-                labelMatrix.append(tempLabels)
+        let width = (UIScreen.main.bounds.size.width - 20) / CGFloat(GameModel.size)
+        for i in 0..<GameModel.size {
+            var tempLabels: [UILabel] = []
+            for j in 0..<GameModel.size {
+                let label: UILabel = UILabel(frame: CGRect(x: 5 + CGFloat(j) * width,
+                                                           y: 5 + CGFloat(i) * width,
+                                                           width: width - 10,
+                                                           height: width - 10))
+                label.tag = i * GameModel.size + j
+                label.textAlignment = .center
+                label.font = UIFont(name: "Futura", size: 40.0)
+                label.adjustsFontSizeToFitWidth = true
+                label.layer.cornerRadius = 5
+                label.layer.masksToBounds = true
+                label.backgroundColor = UIColor.lightGray
+                tempLabels.append(label)
+                boardView.addSubview(label)
             }
+            labelMatrix.append(tempLabels)
         }
         setModel()
     }
@@ -112,11 +107,11 @@ class ViewController: UIViewController {
                                                     alpha: 1.0)
                 } else {
                     label.text = ""
-                    label.backgroundColor = UIColor.clear
+                    label.backgroundColor = .clear
                 }
             }
         }
-        scoreLabel?.text = "\(gameModel.score)"
+        scoreLabel.text = "\(gameModel.score)"
     }
     
     @IBAction func didTapButton(_ sender: UIButton) {
@@ -134,16 +129,16 @@ class ViewController: UIViewController {
         if gameModel.checkIsLose() {
             GameHelper.shared.setNoGameSaved()
             let alert = UIAlertController(title: "You lose", message: "Final score: \(gameModel.score)", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "Try again", style: .default, handler: { _ in
-                self.reset(nil)
+            alert.addAction(UIAlertAction(title: "Try again", style: .default, handler: { [weak self] _ in
+                self?.reset(nil)
             }))
-            alert.addAction(UIAlertAction(title: "Give up", style: .cancel, handler: nil))
-            present(alert, animated: true, completion: nil)
+            alert.addAction(UIAlertAction(title: "Give up", style: .cancel))
+            present(alert, animated: true)
         }
     }
 
     @IBAction func reset(_ sender: Any?) {
-        self.gameModel = GameModel()
+        gameModel = GameModel()
         gameModel.reset()
         setModel()
         GameHelper.shared.setNoGameSaved()

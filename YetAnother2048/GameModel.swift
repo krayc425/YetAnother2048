@@ -27,7 +27,7 @@ class GameModel: NSObject, Codable, NSCoding {
     var score: Int = 0
     var tileMatrix: BoardMatrix = BoardMatrix()
     var isLose: Bool {
-        return self.checkIsLose()
+        return checkIsLose()
     }
     
     override init() {
@@ -37,12 +37,9 @@ class GameModel: NSObject, Codable, NSCoding {
     
     func reset() {
         tileMatrix = Array(repeating: Array(repeating: -1, count: GameModel.size), count: GameModel.size)
-        
         score = 0
-        
-        for _ in 0...1 {
-            self.generateNewTile()
-        }
+        generateNewTile()
+        generateNewTile()
     }
     
     func up() {
