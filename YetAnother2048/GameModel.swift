@@ -10,38 +10,45 @@ import Foundation
 
 typealias BoardMatrix = [[Int]]
 
-class GameModel: NSObject, Codable, NSCoding {
-    
-    required convenience init?(coder aDecoder: NSCoder) {
-        self.init()
-        self.score = aDecoder.decodeInteger(forKey: "score")
-        self.tileMatrix = aDecoder.decodeObject(forKey: "matrix") as! BoardMatrix
+class GameModel: NSObject, Codable, NSSecureCoding {
+
+    static var supportsSecureCoding: Bool {
+        return true
     }
-    
-    func encode(with aCoder: NSCoder) {
-        aCoder.encode(score, forKey: "score")
-        aCoder.encode(tileMatrix, forKey: "matrix")
-    }
-    
     static let size: Int = 4
+
     var score: Int = 0
     var tileMatrix: BoardMatrix = BoardMatrix()
     var isLose: Bool {
         return checkIsLose()
     }
-    
+
     override init() {
         super.init()
         reset()
     }
-    
+
+    required convenience init?(coder aDecoder: NSCoder) {
+        guard let tileMatrix = try? aDecoder.decodeTopLevelObject(of: [NSArray.self, NSNumber.self], forKey: "matrix") as? BoardMatrix else {
+            return nil
+        }
+        self.init()
+        self.score = aDecoder.decodeInteger(forKey: "score")
+        self.tileMatrix = tileMatrix
+    }
+
+    func encode(with aCoder: NSCoder) {
+        aCoder.encode(score, forKey: "score")
+        aCoder.encode(tileMatrix, forKey: "matrix")
+    }
+
     func reset() {
         tileMatrix = Array(repeating: Array(repeating: -1, count: GameModel.size), count: GameModel.size)
         score = 0
         generateNewTile()
         generateNewTile()
     }
-    
+
     func up() {
         var moved: Bool = false
         var temps: [[Int]] = []
@@ -61,7 +68,7 @@ class GameModel: NSObject, Codable, NSCoding {
             generateNewTile()
         }
     }
-    
+
     func down() {
         var moved: Bool = false
         var temps: [[Int]] = []
@@ -83,7 +90,7 @@ class GameModel: NSObject, Codable, NSCoding {
             generateNewTile()
         }
     }
-    
+
     func left() {
         var moved: Bool = false
         for i in 0..<GameModel.size {
@@ -107,16 +114,15 @@ class GameModel: NSObject, Codable, NSCoding {
             generateNewTile()
         }
     }
-    
+
     func checkIsFull() -> Bool {
         return tileMatrix.flatMap { $0.map { $0 } }.filter { $0 == -1 }.count == 0
     }
-    
+
     func checkIsLose() -> Bool {
         guard checkIsFull() else {
             return false
         }
-        
         var isLose = true
         for i in 0..<GameModel.size {
             for j in 0..<GameModel.size-1 {
@@ -138,7 +144,7 @@ class GameModel: NSObject, Codable, NSCoding {
         }
         return isLose
     }
-    
+
     private func generateNewTile() {
         while true {
             let x = Int(arc4random()) % GameModel.size
@@ -150,7 +156,7 @@ class GameModel: NSObject, Codable, NSCoding {
             break
         }
     }
-    
+
     private func handle(tiles: inout [Int]) -> Bool {
         let original = Array(tiles)
         var move: [Int] = Array(repeating: 0, count: tiles.count)
@@ -202,5 +208,5 @@ class GameModel: NSObject, Codable, NSCoding {
         
         return original != tiles
     }
-    
+
 }

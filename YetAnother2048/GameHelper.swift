@@ -21,17 +21,23 @@ class GameHelper: NSObject {
     }
     
     func saveGame(_ gameModel: GameModel) {
-        let data = NSKeyedArchiver.archivedData(withRootObject: gameModel)
+        let data = try? NSKeyedArchiver.archivedData(withRootObject: gameModel, requiringSecureCoding: true)
         userDefaults.set(data, forKey: kGameModelKey)
         userDefaults.synchronize()
     }
     
     func loadGame() -> GameModel? {
-        if let data = userDefaults.value(forKey: kGameModelKey) as? Data,
-            let model = NSKeyedUnarchiver.unarchiveObject(with: data) as? GameModel {
-            return model
+        do {
+            if let data = userDefaults.value(forKey: kGameModelKey) as? Data,
+                let model = try NSKeyedUnarchiver.unarchivedObject(ofClass: GameModel.self, from: data) {
+                return model
+            } else {
+                return nil
+            }
+        } catch let error {
+            print(error)
+            return nil
         }
-        return nil
     }
     
     func setNoGameSaved() {

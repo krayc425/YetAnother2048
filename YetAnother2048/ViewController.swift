@@ -43,9 +43,9 @@ class ViewController: UIViewController {
             let alert = UIAlertController(title: "Unfinished game", message: "There is an unfinished game, do you want to continue?", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "Never mind", style: .cancel))
             alert.addAction(UIAlertAction(title: "Go on", style: .default, handler: { _ in
-                DispatchQueue.main.async { [weak self] in
-                    self?.gameModel = model
-                    self?.setModel()
+                DispatchQueue.main.async {
+                    self.gameModel = model
+                    self.setModel()
                 }
             }))
             present(alert, animated: true)
